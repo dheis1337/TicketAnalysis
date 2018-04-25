@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import glob as glob
+import itertools
 
 files = glob.glob("D://TicketData/*.csv")
 
@@ -9,7 +10,7 @@ events = pd.DataFrame()
 for file in files:
     event = pd.read_csv(file, encoding = 'latin1')
     events = events.append(event)
-    
+
 
 # First I'll remove the duplicates from the data set
 events = events.drop_duplicates()
@@ -18,9 +19,8 @@ events = events.drop_duplicates()
 # Let's look at this by itself and get an idea
 events['seatNumbers']
 
-# So it looks like some entries just don't have the seatNumbers variable filled 
-# out, but they do have the other information, so I'll keep these because they're
-# still valuable
+# change the nan values in seatNumbers into ""
+events['seatNumbers'] = events['seatNumbers'].fillna("")
 
 # One this I want to do is take the date component of the eventtitle column 
 # and make a column for it
@@ -44,11 +44,9 @@ events['event_date'] = events['event_date'].str.replace('.', '/')
 # Add year to date
 events['event_date'] = events['event_date'] + '/18' 
 
+seats = pd.DataFrame(events['seatNumbers'].str.split(',').tolist(), index = events['listingId']).stack().reset_index().drop('level_1', axis = 1)
 
-
-
-
-
-
-
+events = pd.merge(left = events, right = seats, left_on = 'listingId', right_on = 'listingId')
+events = events.drop('seatNumbers', axis = 1)
+events = events.drop_duplicates()
 
