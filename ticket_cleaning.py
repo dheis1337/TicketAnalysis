@@ -48,5 +48,33 @@ seats = pd.DataFrame(events['seatNumbers'].str.split(',').tolist(), index = even
 
 events = pd.merge(left = events, right = seats, left_on = 'listingId', right_on = 'listingId')
 events = events.drop('seatNumbers', axis = 1)
+
+# Remove dupliclates
 events = events.drop_duplicates()
 
+# Reset index
+events = events.reset_index()
+
+# Rename columns
+events.columns = ['index', 'listing_id', 'quantity', 'row', 'section_name', 'current_price',
+                  'listing_price', 'event_date', 'home_team', 'away_team', 'seat_number']
+
+
+# Reorder column
+events = events[['listing_id', 'home_team', 'away_team', 'event_date' ,'quantity', 'row', 'seat_number', 
+                'section_name', 'current_price', 'listing_price']]
+
+# Create a column that is the percentage increase from listing_price to current_price
+events['price_change'] = (events['current_price'] - events['listing_price']) / events['listing_price']
+
+# Change dtypes
+events[['quantity', 'current_price', 'listing_price', 'price_change']] = events[['quantity', 'current_price', 'listing_price', 'price_change']].apply(pd.to_numeric)
+
+# event_date to datetime
+events['event_date'] = pd.to_datetime(events['event_date'])
+
+# listing_id to character
+events['listing_id'] = events['listing_id'].astype('str')
+
+
+events.to_csv('C://MyStuff/DataScience/Projects/TicketAnalysis/events_clean.csv')
