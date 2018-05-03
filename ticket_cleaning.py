@@ -35,6 +35,10 @@ events['home_team'] = events['split'].str.get(1)
 # Make an away_team column
 events['away_team'] = events['split'].str.get(3)
 
+# It looks like everything worked out well, except the Trail Blazers got cut to 
+# just Trail. Let's fix that 
+events.loc[events['away_team'].str.contains('Trail', case = False), 'away_team'] = "Trail Blazers" 
+
 # Now let's get rid of all the columns we don't need
 events = events.drop(['split', 'eventtitle'], axis = 1)
 
@@ -76,5 +80,38 @@ events['event_date'] = pd.to_datetime(events['event_date'])
 # listing_id to character
 events['listing_id'] = events['listing_id'].astype('str')
 
+# I want to add a column that summarizes the section by its level, i.e. level 
+# in the arena. First, I want to get a general idea of all the different section 
+# categories
+events['section_name'].unique()
 
-events.to_csv('C://MyStuff/DataScience/Projects/TicketAnalysis/events_clean.csv')
+# It looks like a lot of the tickets are related to Club, Suite, Loge and other 
+# high-end tickets. We don't want these.  I'll map these to two categories - 
+# Club, and Courtside. 
+events.loc[events['section_name'].str.contains('Club|Suite|Premier|Loge|lounge|box', case = False), 'level'] = "club" 
+
+# See what remaining sections are left
+events[events['level'] != 'Club']['section_name'].unique()
+
+# Courtside and floor tickets are next
+events.loc[events['section_name'].str.contains('courtside|floor' , case = False), 'level'] = "courtside" 
+
+# See what is remaining
+events[events['level'].isnull()]['section_name'].unique()
+
+# It looks like most sections have numbers with them. I'm going to roughly create
+# categories called Upper, Mid, Lower which will correspond to numbers 300+, 200-299,
+# and 0-199, respectively
+events.loc[events['section_name'].str.contains('3[0-9][0-9]|4[0-9][0-9]|5[0-9][0-9]'), 'level'] = 'upper'
+events.loc[events['section_name'].str.contains('2[0-9][0-9]'), 'level'] = 'middle'
+events.loc[events['section_name'].str.contains('[0-9][0-9]|1[0-9][0-9]'), 'level'] = "lower"
+
+# Let's see what values didn't get mapped to one of the above levels
+events[events['level'].isnull()]['section_name'].unique()
+
+
+events_of_interest = events[events['listing_price'] < 150]
+
+events.to_csv('C://MyStuff/DataScience/Projects/TicketAnalysis/events_clean.csv', index = False)
+
+events_of_interest.to_csv('C://MyStuff/DataScience/Projects/TicketAnalysis/events_of_interest.csv', index = False)

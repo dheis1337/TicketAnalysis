@@ -40,18 +40,21 @@ price_quants_by_team['quant_price_change'] = ((price_quants_by_team['current_pri
                                         price_quants_by_team['listing_price'])
                                         
 # Quantiles of current_price, listing_price, price_change by team
-events.groupby('home_team')['current_price', 'listing_price', 'price_change'].quantile([0, .25, .5, .75, 1])
+events[['home_team', 'current_price', 'listing_price']].plot(kind = 'hist', subplots = 'True')
+
+# Density of current_price and listing_price for each team
+events.groupby('home_team')['current_price', 'listing_price'].plot(kind = 'kde', xlim = [-100, 250])
+                                                                 
+
+# Let's look at the data grouped by home_team, then away_team to get an idea
+# of how the average price change varies
+events.groupby(['home_team', 'away_team'])['price_change'].mean().nlargest(15)
 
 
+# Let's look at price data by the level now
+events.groupby(['level'])['current_price', 'listing_price'].describe()
 
 
+events[events['level'] == 'Upper'][['current_price', 'listing_price']].plot(kind = 'kde', xlim = [-10, 1500])
 
-
-
-
-
-
-
-
-
-
+events[events['listing_price'] > 1400]
