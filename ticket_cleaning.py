@@ -109,8 +109,44 @@ events.loc[events['section_name'].str.contains('[0-9][0-9]|1[0-9][0-9]'), 'level
 # Let's see what values didn't get mapped to one of the above levels
 events[events['level'].isnull()]['section_name'].unique()
 
+# Now let's create a new column that is a flag for the team opponent being a 
+# divisional game. First, let's figure out all our home_teams
+events['home_team'].unique()
+events['away_team'].unique()
 
-events_of_interest = events[events['listing_price'] < 150]
+
+# Let's start with the Bulls. The teams in the Bulls division are the Pacers
+# the Bucks, the Pistons, and th Cavaliers. I'm a little hesitant to add the Cavs
+# in this list, just because I know ticket prices are a lot more for every team 
+# when Lebron is in town. That said, I'll go ahead and do it for now. 
+events.loc[(events['home_team'] == 'Bulls') & (events['away_team'].isin(['Pacers', 'Bucks', 'Pistons', 'Cavaliers'])), 'divisional_game'] = '1'
+
+# Now for the 76ers
+events.loc[(events['home_team'] == '76ers') & (events['away_team'].isin(['Celtics', 'Raptors', 'Nets', 'Knicks'])), 'divisional_game'] = '1'
+
+# Now for the Clippers; the Warriors have similar pull as Lebron, but I'll still include them
+events.loc[(events['home_team'] == 'Clippers') & (events['away_team'].isin(['Lakers', 'Warriors', 'Kings', 'Suns'])), 'divisional_game'] = '1'
+
+# Now for the Lakers
+events.loc[(events['home_team'] == 'Lakers') & (events['away_team'].isin(['Clippers', 'Warriors', 'Kings', 'Suns'])), 'divisional_game'] = '1'
+
+# Now fo the Rockets
+events.loc[(events['home_team'] == 'Rockets') & (events['away_team'].isin(['Spurs', 'Mavericks', 'Pelicans', 'Grizzlies'])), 'divisional_game'] = '1'
+
+# Now for the Nuggets
+events.loc[(events['home_team'] == 'Nuggets') & (events['away_team'].isin(['Thunder', 'Nuggets', ' Jazz', 'Trail Blazers', 'Timberwolves'])), 'divisional_game'] = '1'
+
+# Now I need to set the rest of the values in the divisional_game to 0
+events.loc[events['divisional_game'] != '1', 'divisional_game'] = '0'
+
+# Let's see how many divisional games we had
+events[events['divisional_game'] == '1']
+
+# Let's just verify the above definitions worked
+events.groupby(['home_team', 'away_team'])['divisional_game'].value_counts()
+
+
+events_of_interest = events[events['listing_price'] < 150.0]
 
 events.to_csv('C://MyStuff/DataScience/Projects/TicketAnalysis/events_clean.csv', index = False)
 
