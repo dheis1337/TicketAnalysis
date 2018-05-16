@@ -3,6 +3,7 @@ import numpy as np
 import glob as glob
 import itertools
 
+
 files = glob.glob("D://TicketData/*.csv")
 
 events = pd.DataFrame()
@@ -11,6 +12,9 @@ for file in files:
     event = pd.read_csv(file, encoding = 'latin1')
     events = events.append(event)
 
+s3_events = pd.read_csv('C:/MyStuff/DataScience/Projects/TicketAnalysis/s3_events.csv', encoding = 'utf-8')
+
+events = events.append(s3_events)
 
 # First I'll remove the duplicates from the data set
 events = events.drop_duplicates()
@@ -43,12 +47,14 @@ events.loc[events['away_team'].str.contains('Trail', case = False), 'away_team']
 events = events.drop(['split', 'eventtitle'], axis = 1)
 
 # Let's clean the event_date column a little more
-events['event_date'] = events['event_date'].str.replace('.', '/')
+events['event_date'] = events['event_date'].str.replace('.', '-')
 
 # Add year to date
-events['event_date'] = events['event_date'] + '/18' 
+events['event_date'] = events['event_date'] + '-18' 
+
 
 seats = pd.DataFrame(events['seatNumbers'].str.split(',').tolist(), index = events['listingId']).stack().reset_index().drop('level_1', axis = 1)
+
 
 events = pd.merge(left = events, right = seats, left_on = 'listingId', right_on = 'listingId')
 events = events.drop('seatNumbers', axis = 1)
@@ -60,13 +66,14 @@ events = events.drop_duplicates()
 events = events.reset_index()
 
 # Rename columns
-events.columns = ['index', 'listing_id', 'quantity', 'row', 'section_name', 'current_price',
-                  'listing_price', 'event_date', 'home_team', 'away_team', 'seat_number']
+events.columns = ['index', 'current_price', 'date_scraped', 'listing_id', 'listing_price',
+                  'quantity', 'row', 'section_name', 'event_date', 'home_team', 
+                  'away_team', 'seat_number']
 
 
 # Reorder column
 events = events[['listing_id', 'home_team', 'away_team', 'event_date' ,'quantity', 'row', 'seat_number', 
-                'section_name', 'current_price', 'listing_price']]
+                'section_name', 'current_price', 'listing_price', 'date_scraped']]
 
 # Create a column that is the percentage increase from listing_price to current_price
 events['price_change'] = (events['current_price'] - events['listing_price']) / events['listing_price']
@@ -102,9 +109,9 @@ events[events['level'].isnull()]['section_name'].unique()
 # It looks like most sections have numbers with them. I'm going to roughly create
 # categories called Upper, Mid, Lower which will correspond to numbers 300+, 200-299,
 # and 0-199, respectively
+events.loc[events['section_name'].str.contains('[0-9][0-9]|1[0-9][0-9]'), 'level'] = "lower"
 events.loc[events['section_name'].str.contains('3[0-9][0-9]|4[0-9][0-9]|5[0-9][0-9]'), 'level'] = 'upper'
 events.loc[events['section_name'].str.contains('2[0-9][0-9]'), 'level'] = 'middle'
-events.loc[events['section_name'].str.contains('[0-9][0-9]|1[0-9][0-9]'), 'level'] = "lower"
 
 # Let's see what values didn't get mapped to one of the above levels
 events[events['level'].isnull()]['section_name'].unique()
