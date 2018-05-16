@@ -2,6 +2,9 @@ import matplotlib as plt
 import pandas as pd
 import numpy as np
 import os
+import seaborn as sns
+
+sns.set(style = 'whitegrid', color_codes = True)
 
 
 # set working directory
@@ -52,9 +55,62 @@ events.groupby(['home_team', 'away_team'])['price_change'].mean().nlargest(15)
 
 
 # Let's look at price data by the level now
-events.groupby(['level'])['current_price', 'listing_price'].describe()
+events.groupby(['level'])['current_price', 'listing_price'].describe()   
+
+# It looks like there's some outliers in the data. Let's use the events_of_interest 
+# csv, which is basically a csv with a limit on the listing_price of 150
+events_of_interest = pd.read_csv('C:/MyStuff/DataScience/Projects/TicketAnalysis/events_of_interest.csv')
+
+# Now let's look at the summarizing information of the data broken down by level
+events_of_interest.groupby('level')['current_price', 'listing_price'].describe()
+
+# This data looks much better than what we had for some of the values in the events 
+# data frame. Now let's visualize some of the density plots for the current_price
+# and listing_price for each level
+levels_density = events_of_interest.groupby('level')['current_price', 'listing_price'].plot(kind = "kde")
+
+# Save plots
+club_density = levels_density[0].get_figure()
+lower_density = levels_density[1].get_figure()
+middle_density = levels_density[2].get_figure()
+upper_density = levels_density[3].get_figure()
+
+# Set some titles
+club_density.suptitle('Club Level Density of Current Price and Listing Price')
+lower_density.suptitle('Lower Level Density of Current Price and Listing Price')
+middle_density.suptitle('Middle Level Density of Current Price and Listing Price')
+upper_density.suptitle('Upper Level Density of Current Price and Listing Price')
 
 
-events[events['level'] == 'Upper'][['current_price', 'listing_price']].plot(kind = 'kde', xlim = [-10, 1500])
+# Save the figures
+club_density.savefig('C:/MyStuff/DataScience/Projects/TicketAnalysis/visualizations/club_density_cprice_lprice.png')
+lower_density.savefig('C:/MyStuff/DataScience/Projects/TicketAnalysis/visualizations/lower_density_cprice_lprice.png')
+middle_density.savefig('C:/MyStuff/DataScience/Projects/TicketAnalysis/visualizations/middle_density_cprice_lprice.png')
+upper_density.savefig('C:/MyStuff/DataScience/Projects/TicketAnalysis/visualizations/upper_density_cprice_lprice.png')
 
-events[events['listing_price'] > 1400]
+# Now let's change this up slightly and compare the density of current_price and listing_price
+# separately, with a density for each level on the plot
+events_of_interest.groupby('level')['current_price'].plot(kind = 'kde')
+
+
+
+# Create a boxplot of the current_price, listing_price, and price_change by level and then save them
+cprice_box = sns.boxplot(x = 'current_price', y = 'level', data = events_of_interest)
+cprice_fig = cprice_box.get_figure()
+cprice_fig.savefig('C:/MyStuff/DataScience/Projects/TicketAnalysis/visualizations/cprice_boxplot.png')
+
+# Listing price
+lprice_box = sns.boxplot(x = 'listing_price', y = 'level', data = events_of_interest)
+lprice_fig = lprice_box.get_figure()
+lprice_fig.savefig('C:/MyStuff/DataScience/Projects/TicketAnalysis/visualizations/lprice_boxplot.png')
+
+# Price change
+pchange_box = sns.boxplot(x = 'price_change', y = 'level', data = events_of_interest)
+pchange_fig = pchange_box.get_figure()
+pchange_fig.savefig('C:/MyStuff/DataScience/Projects/TicketAnalysis/visualizations/pchange_boxplot.png')
+
+
+#
+
+   
+
