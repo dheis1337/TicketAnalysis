@@ -3,9 +3,9 @@ import boto3
 import io
 
 
-# Create key, key secret, and bucket_name
-AWS_ACCESS_KEY_ID = 'AKIAJXPNC6JIDI5JXSJQ'
-AWS_ACCESS_KEY_SECRET = '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'
+# Copy and paste AWS key info here
+AWS_ACCESS_KEY_ID = ''
+AWS_ACCESS_KEY_SECRET = ''
 
 # Create session connection
 session = boto3.Session(AWS_ACCESS_KEY_ID, AWS_ACCESS_KEY_SECRET)
@@ -61,4 +61,4 @@ list(map(build_df, buckets))
 tickets = tickets.drop_duplicates()
 
 # save to .csv 
-tickets.to_csv('C:/MyStuff/DataScience/Projects/TicketAnalysis/s3_events.csv', index = False)
+tickets.to_csv('C:/MyStuff/DataScience/Projects/TicketAnalysis/s3_events.csv', index = False, encoding = 'utf-8')
